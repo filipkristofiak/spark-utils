@@ -96,6 +96,9 @@ trait DataFrameUtils {
 
     def DISK(): DataFrame = df.persist(org.apache.spark.storage.StorageLevel.DISK_ONLY)
 
+    /**
+     * Triggers eager evaluation of a dataframe, useful after persisting
+     */
     def eval(): Unit = df.foreach(_ => ())
 
     // scala collection like
