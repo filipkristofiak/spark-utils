@@ -36,7 +36,7 @@ expDF
        .as("interval_cat")
   ).count
   
- //////////////////// out: /////////////////////////////////////////
+ //  out:
  //  +--------+-----+      +-------+-----+      +------------+-----+  
  //  |step_cat|count|      |log_cat|count|      |interval_cat|count|
  //  +--------+-----+      +-------+-----+      +------------+-----+
@@ -53,9 +53,34 @@ expDF
  //  +--------+-----+
 ```
 
+## Inline UDF conversion
+Easy way to transform a pure (testable) Scala function into **user-defined funtion** in an in-line fashion
+```scala
+val positiveLessThanTwo: Long => Option[Boolean] = {
+  case num if num > 0 => Some(num < 2)
+  case _ => None
+}
+
+spark
+  .range(5)
+  .withColumn("positive_less_than_two", positiveLessThanTwo.udf($"id"))
+  
+//  out:
+//  +---+----------------------+
+//  | id|positive_less_than_two|
+//  +---+----------------------+
+//  |  0|                  null|
+//  |  1|                  true|
+//  |  2|                 false|
+//  |  3|                 false|
+//  |  4|                 false|
+//  +---+----------------------+
+```
+
 ## Date Column formatting
 ```scala
 import java.util.Locale
+
 val dateAdd: (java.sql.Date, Int) => java.sql.Date = (dt, i) => java.sql.Date.valueOf(dt.toLocalDate.plusDays(i))
 
 spark
@@ -70,7 +95,7 @@ spark
   .withColumn("fmt_quarter", formatDate("yyyy-'Q'Q"           ).udf($"date"))
   .withColumn("fmt_dow",     formatDate(        "E", Locale.UK).udf($"date"))
 
-//////////////////// out: /////////////////////////////
+//  out:
 //  +----------+--------+---------+-----------+-------+
 //  |      date|fmt_week|fmt_month|fmt_quarter|fmt_dow|
 //  +----------+--------+---------+-----------+-------+
