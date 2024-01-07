@@ -1,9 +1,10 @@
 package com.filipkr.spark.utils.time
 
-import java.sql.Timestamp
+import java.sql.{Date, Timestamp}
 import java.text.SimpleDateFormat
 import java.time.{DayOfWeek, Duration, Instant, LocalDate, OffsetDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 import scala.util.Try
 
@@ -102,25 +103,29 @@ trait TimeUtils {
   /**
    * format Spark Date column to string using DateTime Format Pattern,
    * i.e. ymdFormatPattern = "yyyy-MM-dd", ymFormatPattern = "yyyy-MM", "yyyy/MM"
-   *
    * @example {{{
-   *           spark
-   *             .table("da.us_activity_diff")
-   *             .select(
+   *           df.select(
    *                $"date",
    *                formatDate(ymFormatPattern).udf($"date").as("partition_date")
    *             )
    * }}}
    */
-  val formatDate: String => java.sql.Date => String = {
-    case "yyyy-MM"         => _.toLocalDate.format(TimeUtils.ymFormatter)
-    case "yyyy-'Q'Q"       => _.toLocalDate.format(TimeUtils.yqFormatter)
-    case "yyyy-'Q'Q-MM"    => _.toLocalDate.format(TimeUtils.yqmFormatter)
-    case "yyyy-'Q'Q-MM-dd" => _.toLocalDate.format(TimeUtils.yqmdFormatter)
-    case "yyyy-MM-dd"      => _.toLocalDate.format(TimeUtils.ymdFormatter)
-    case "yyyy"            => _.toLocalDate.format(TimeUtils.yFormatter)
-    case fmtPattern        => _.toLocalDate.format(DateTimeFormatter.ofPattern(fmtPattern))
-  }
+  def formatDate(fmtPattern: String): Date => String =
+    fmtPattern match {
+      case "yyyy-MM"         => _.toLocalDate.format(TimeUtils.ymFormatter)
+      case "yyyy-'Q'Q"       => _.toLocalDate.format(TimeUtils.yqFormatter)
+      case "yyyy-'Q'Q-MM"    => _.toLocalDate.format(TimeUtils.yqmFormatter)
+      case "yyyy-'Q'Q-MM-dd" => _.toLocalDate.format(TimeUtils.yqmdFormatter)
+      case "yyyy-MM-dd"      => _.toLocalDate.format(TimeUtils.ymdFormatter)
+      case "yyyy"            => _.toLocalDate.format(TimeUtils.yFormatter)
+      case _                 => _.toLocalDate.format(DateTimeFormatter.ofPattern(fmtPattern))
+    }
+
+  /**
+   * use locale when your enviromental sense of day of week is different than yours
+   */
+  def formatDate(fmtPattern: String, lcl: Locale): Date => String =
+    _.toLocalDate.format(DateTimeFormatter.ofPattern(fmtPattern, lcl))
 
   def currentTimeFmt(): String = daytimeFormatter.format(new Timestamp(System.currentTimeMillis()))
 
