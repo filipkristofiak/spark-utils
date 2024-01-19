@@ -28,7 +28,7 @@ object ExponentialMovingAverage {
                 columnPartitionValues(idx.toInt).getAs[Date]("date").toLocalDate,
                 date.toLocalDate,
                 chronoUnit
-              ) / periodSize.toInt
+              ) / periodSize.toInt // TODO: fix for date-sparse data
             )
           )
           .foldLeft(new Array[Double](sliceSize)) { (accumulator, exp) =>
@@ -41,7 +41,7 @@ object ExponentialMovingAverage {
 
         (adjustedWeights, columnPartitionValues.map(x => metricNames.map(_metric => x.getAs[Double](_metric)))).zipped.toSeq
           .map(x => x._2.map(_ * x._1))
-          .foldLeft(new Array[Double](Seq(10, 7, 3).size)) { (accumulator, summands) =>
+          .foldLeft(new Array[Double](metricNames.size)) { (accumulator, summands) =>
             (0 until accumulator.size).foreach(i => accumulator(i) += summands(i))
             accumulator
           }
